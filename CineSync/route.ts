@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { generateEmbedding } from '@/lib/utils/generateEmbedding'
-import { supabase } from '@/lib/supabase'
+import { generateEmbedding } from './generateEmbedding'
+import { supabase } from './supabase'
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +18,8 @@ export async function POST(request: Request) {
       .rpc('search_movies_by_embedding', {
         query_embedding: queryEmbedding,
         similarity_threshold: 0.1,
-        match_count: 10
+        match_count: 10,
+        genre_filter: selectedGenres?.length ? selectedGenres : null
       })
 
     if (error) {
@@ -26,16 +27,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to search movies' }, { status: 500 })
     }
 
-    // Filter by selected genres if any are selected
-    const filteredMovies = selectedGenres?.length
-      ? data.filter((movie: any) => 
-          movie.genres.some((genre: string) => 
-            selectedGenres.includes(genre.toLowerCase())
-          )
-        )
-      : data
-
-    return NextResponse.json({ movies: filteredMovies })
+    return NextResponse.json({ movies: data })
   } catch (error) {
     console.error('Error in search route:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
