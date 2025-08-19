@@ -54,7 +54,7 @@ export default function Home() {
               <div className="flex gap-4">
                 <input
                   type="text"
-                  placeholder="How are you feeling? (e.g., "I want something cozy and funny")"
+                  placeholder='How are you feeling? (e.g., "I want something cozy and funny")'
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
