@@ -3,41 +3,53 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { MovieCard } from "@/components/MovieCard"
 import { Movie } from "@/types"
+import { useFavorites } from "@/hooks"
 
 export default function Home() {
   const [searchInput, setSearchInput] = useState("")
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [movies, setMovies] = useState<Movie[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [hasSearched, setHasSearched] = useState(false)
+  const { toggleFavorite, isFavorite } = useFavorites()
+
+  const availableGenres = ['Action', 'Comedy', 'Drama', 'Sci-Fi', 'Horror', 'Romance', 'Thriller', 'Fantasy']
+
+  const handleGenreToggle = (genre: string) => {
+    setSelectedGenres(prev =>
+      prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]
+    )
+  }
 
   const handleSearch = async () => {
     if (!searchInput.trim()) return
 
     setLoading(true)
+    setError(null)
+    setHasSearched(true)
     try {
-      // TODO: Implement actual search logic using Supabase
-      // For now, we'll just simulate some movies
-      const mockMovies = [
-        {
-          id: "1",
-          title: "Inception",
-          genres: ["action", "sci-fi"],
-          description: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.",
-          poster_url: "https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
-          embedding: [] // Will be populated by Supabase
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          id: "2",
-          title: "The Matrix",
-          genres: ["action", "sci-fi"],
-          description: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
-          poster_url: "https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
-          embedding: []
-        }
-      ]
-      setMovies(mockMovies)
-    } catch (error) {
-      console.error("Error searching movies:", error)
+        body: JSON.stringify({
+          searchQuery: searchInput,
+          selectedGenres,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Something went wrong')
+      }
+
+      const data = await response.json()
+      setMovies(data.movies)
+    } catch (err: any) {
+      console.error("Error searching movies:", err)
+      setError(err.message)
     } finally {
       setLoading(false)
     }
@@ -64,23 +76,44 @@ export default function Home() {
                 </Button>
               </div>
               
-              {/* Genre filter - will be implemented later */}
               <div className="flex flex-wrap gap-2">
-                {/* Genre buttons will be added here */}
+                {availableGenres.map(genre => (
+                  <Button
+                    key={genre}
+                    variant={selectedGenres.includes(genre.toLowerCase()) ? 'default' : 'outline'}
+                    onClick={() => handleGenreToggle(genre.toLowerCase())}
+                  >
+                    {genre}
+                  </Button>
+                ))}
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {movies.map((movie) => (
-            <MovieCard
-              key={movie.id}
-              movie={movie}
-              onFavorite={() => {}}
-              isFavorite={false}
-            />
-          ))}
+          {loading ? (
+            <p className="text-center col-span-3">Loading...</p>
+          ) : movies.length > 0 ? (
+            movies.map((movie) => (
+              <MovieCard
+                key={movie.id}
+                movie={movie}
+                onFavorite={() => toggleFavorite(movie.id)}
+                isFavorite={isFavorite(movie.id)}
+              />
+            ))
+          ) : hasSearched ? (
+            <p className="text-center col-span-3 text-muted-foreground">
+              No movies found. Try a different search.
+            </p>
+          ) : (
+            <p className="text-center col-span-3 text-muted-foreground">
+              Find your next favorite movie!
+            </p>
+          )}
         </div>
       </div>
     </main>

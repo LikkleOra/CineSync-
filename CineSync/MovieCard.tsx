@@ -8,9 +8,9 @@ import { MovieCardProps } from "@/types"
 export function MovieCard({ movie, onFavorite, isFavorite }: MovieCardProps) {
   const [localIsFavorite, setLocalIsFavorite] = useState(isFavorite)
 
-  const handleFavorite = async () => {
+  const handleFavorite = () => {
     setLocalIsFavorite(!localIsFavorite)
-    await onFavorite(movie)
+    onFavorite()
   }
 
   return (
