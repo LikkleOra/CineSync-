@@ -16,6 +16,6 @@ export type MoodSearchInput = {
 
 export type MovieCardProps = {
   movie: Movie;
-  onFavorite: (movie: Movie) => void;
+  onFavorite: () => void;
   isFavorite: boolean;
 };
