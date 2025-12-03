@@ -1,6 +1,6 @@
 export async function generateEmbedding(text: string): Promise<number[]> {
   const apiKey = process.env.HUGGINGFACE_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error('HUGGINGFACE_API_KEY is not configured');
   }
@@ -11,7 +11,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
   try {
     const response = await fetch(
-      'https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2',
+      'https://router.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2',
       {
         method: 'POST',
         headers: {
@@ -37,7 +37,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     // Hugging Face returns array of embeddings for batch input
     // For single input, it returns [[...embedding...]]
     let embedding: number[];
-    
+
     if (Array.isArray(data) && Array.isArray(data[0])) {
       embedding = data[0];
     } else if (Array.isArray(data)) {

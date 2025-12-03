@@ -10,25 +10,24 @@ interface GenreFilterProps {
 
 export function GenreFilter({ genres, selectedGenres, onGenreSelect }: GenreFilterProps) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {genres.map((genre) => {
-        const isSelected = selectedGenres.includes(genre.name.toLowerCase());
-        return (
+    <div className="space-y-3">
+      <h3 className="text-lg font-semibold text-white">4. Filter by Genre (Optional)</h3>
+      <div className="flex flex-wrap gap-2">
+        {genres.map((genre) => (
           <button
             key={genre.id}
-            onClick={() => onGenreSelect(genre.name.toLowerCase())}
+            onClick={() => onGenreSelect(genre.name)}
             className={cn(
-              "px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300 border",
-              isSelected
-                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
-                : "bg-card/50 text-muted-foreground border-border hover:border-primary/50 hover:text-foreground hover:bg-card"
+              "px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200",
+              selectedGenres.includes(genre.name)
+                ? "bg-white/10 border-white text-white"
+                : "bg-transparent border-white/20 text-muted-foreground hover:border-white/50 hover:text-white"
             )}
           >
             {genre.name}
           </button>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
-

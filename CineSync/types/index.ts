@@ -20,6 +20,9 @@ export interface Movie {
   genres: string[];
   description: string;
   poster_url: string;
+  release_date?: string;
+  popularity?: number;
+  vote_average?: number;
   embedding: number[];
   created_at?: string;
 }

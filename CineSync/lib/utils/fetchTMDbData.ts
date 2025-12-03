@@ -9,6 +9,9 @@ export interface TmdbMovie {
   overview: string;
   poster_path: string | null;
   genre_ids: number[];
+  release_date: string;
+  popularity: number;
+  vote_average: number;
 }
 
 export interface TmdbMovieDetails {
@@ -113,6 +116,9 @@ export async function fetchPopularMovies(page: number = 1) {
         .filter((genre): genre is string => genre !== undefined),
       description: movie.overview || 'No description available',
       poster_url: buildPosterUrl(movie.poster_path),
+      release_date: movie.release_date,
+      popularity: movie.popularity,
+      vote_average: movie.vote_average,
       embedding: [] as number[],
     }));
   } catch (error) {
