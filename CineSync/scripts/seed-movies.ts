@@ -55,9 +55,19 @@ async function seedMovies() {
 
     // Insert into Supabase
     console.log('💾 Inserting movies into Supabase...');
+
+    // Map 'description' to 'overview' to match Supabase schema
+    const moviesToInsert = validMovies.map(movie => {
+      const { description, ...rest } = movie;
+      return {
+        ...rest,
+        overview: description
+      };
+    });
+
     const { error, data } = await supabase
       .from('movies')
-      .insert(validMovies)
+      .insert(moviesToInsert)
       .select();
 
     if (error) {

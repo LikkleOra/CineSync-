@@ -25,6 +25,8 @@ export interface Movie {
   vote_average?: number;
   embedding: number[];
   created_at?: string;
+  tagline?: string;
+  runtime?: number;
 }
 
 export interface MovieSearchResult extends Movie {

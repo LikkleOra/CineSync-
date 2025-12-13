@@ -33,7 +33,10 @@ export async function searchMoviesByEmbedding(
       throw new Error(`Supabase RPC error: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map((movie: any) => ({
+      ...movie,
+      description: movie.overview,
+    }));
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to search movies: ${error.message}`);

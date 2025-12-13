@@ -149,3 +149,65 @@ export async function fetchMovieGenres() {
     throw error;
   }
 }
+
+export interface TmdbVideo {
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+  official: boolean;
+}
+
+export async function fetchMovieVideos(movieId: number) {
+  try {
+    const apiKey = validateApiKey();
+    const response = await axios.get(
+      `${TMDB_API_BASE_URL}/movie/${movieId}/videos`,
+      {
+        params: {
+          api_key: apiKey,
+          language: 'en-US',
+        },
+      }
+    );
+    return response.data.results as TmdbVideo[];
+  } catch (error) {
+    console.error(`Failed to fetch videos for movie ${movieId}:`, error);
+    return [];
+  }
+}
+
+export interface WatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string;
+}
+
+export interface WatchProvidersResponse {
+  results: {
+    US?: {
+      flatrate?: WatchProvider[];
+      rent?: WatchProvider[];
+      buy?: WatchProvider[];
+    };
+  };
+}
+
+export async function fetchWatchProviders(movieId: number) {
+  try {
+    const apiKey = validateApiKey();
+    const response = await axios.get(
+      `${TMDB_API_BASE_URL}/movie/${movieId}/watch/providers`,
+      {
+        params: {
+          api_key: apiKey,
+        },
+      }
+    );
+    return (response.data as WatchProvidersResponse).results.US;
+  } catch (error) {
+    console.error(`Failed to fetch watch providers for movie ${movieId}:`, error);
+    return null;
+  }
+}

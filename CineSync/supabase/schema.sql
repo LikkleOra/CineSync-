@@ -1,23 +1,28 @@
 -- Enable the pgvector extension to work with embedding vectors
 create extension if not exists vector;
 
--- Create the movies table
+-- Drop existing table and function to recreate with new dimensions
+drop function if exists search_movies_by_embedding;
+drop table if exists movies;
+
+-- Create the movies table with 768-dimension embeddings for Gemini
 create table movies (
   id bigint primary key,
   title text not null,
   overview text,
-  genre_ids integer[], -- Storing as array of integers if needed, or we can use text[] for names
-  genres text[],       -- The app currently uses text[] for genre names
+  genre_ids integer[],
+  genres text[],
   poster_url text,
   release_date date,
   popularity float,
-  embedding vector(384), -- all-MiniLM-L6-v2 outputs 384 dimensions
+  vote_average float,
+  embedding vector(768), -- Gemini text-embedding-004 outputs 768 dimensions
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- Create a function to search for movies by embedding similarity
 create or replace function search_movies_by_embedding(
-  query_embedding vector(384),
+  query_embedding vector(768),
   similarity_threshold float,
   match_count int
 )
@@ -29,6 +34,7 @@ returns table (
   poster_url text,
   release_date date,
   popularity float,
+  vote_average float,
   similarity float
 )
 language plpgsql
@@ -43,6 +49,7 @@ begin
     movies.poster_url,
     movies.release_date,
     movies.popularity,
+    movies.vote_average,
     1 - (movies.embedding <=> query_embedding) as similarity
   from movies
   where 1 - (movies.embedding <=> query_embedding) > similarity_threshold
@@ -50,3 +57,6 @@ begin
   limit match_count;
 end;
 $$;
+
+-- Create index for faster similarity search
+create index on movies using ivfflat (embedding vector_cosine_ops) with (lists = 100);

@@ -12,9 +12,10 @@ interface MovieCardProps {
   onFavorite: () => void;
   isFavorite: boolean;
   index?: number;
+  onClick?: () => void;
 }
 
-export function MovieCard({ movie, onFavorite, isFavorite, index = 0 }: MovieCardProps) {
+export function MovieCard({ movie, onFavorite, isFavorite, index = 0, onClick }: MovieCardProps) {
   const [imageError, setImageError] = useState(false);
 
   return (
@@ -22,7 +23,8 @@ export function MovieCard({ movie, onFavorite, isFavorite, index = 0 }: MovieCar
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group relative h-full"
+      className="group relative h-full cursor-pointer"
+      onClick={onClick}
     >
       <Card className="h-full overflow-hidden border-0 bg-card/40 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/10 hover:bg-card/60">
         <div className="relative aspect-[2/3] w-full overflow-hidden">

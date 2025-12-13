@@ -8,6 +8,7 @@ import { MediaTypeSelector, type MediaType } from '@/components/MediaTypeSelecto
 import { VibeInput } from '@/components/VibeInput';
 import { GenreFilter } from '@/components/GenreFilter';
 import { MovieCard } from '@/components/MovieCard';
+import { MovieModal } from '@/components/MovieModal';
 import { useFavorites } from '@/hooks/useFavorites';
 import type { Movie } from '@/types';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ export default function HomeClient({ genres }: HomeClientProps) {
     const [mediaType, setMediaType] = useState<MediaType>('movie');
     const [vibe, setVibe] = useState('');
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+    const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
     const [loading, setLoading] = useState(false);
     const [movies, setMovies] = useState<Movie[]>([]);
@@ -44,6 +46,7 @@ export default function HomeClient({ genres }: HomeClientProps) {
             return;
         }
 
+        console.log('🔍 Starting search with:', { selectedMood, vibe, selectedGenres, mediaType });
         setLoading(true);
         setError(null);
         setHasSearched(true);
@@ -56,23 +59,50 @@ export default function HomeClient({ genres }: HomeClientProps) {
                 mediaType !== 'any' ? mediaType : ''
             ].filter(Boolean).join(' ');
 
+            console.log('📝 Search query:', searchQuery);
+
+            // Step 1: Generate embedding on client-side
+            console.log('🔄 Generating embedding (client-side)...');
+            const embeddingResponse = await fetch('/api/embedding', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: searchQuery.trim() }),
+            });
+
+            if (!embeddingResponse.ok) {
+                const errorData = await embeddingResponse.json();
+                console.error('❌ Embedding Error:', errorData);
+                throw new Error(errorData.error || 'Failed to generate embedding');
+            }
+
+            const { embedding } = await embeddingResponse.json();
+            console.log('✅ Embedding generated:', embedding.length, 'dimensions');
+
+            // Step 2: Search movies with the embedding
+            console.log('🔄 Searching movies...');
             const response = await fetch('/api/search', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    searchQuery,
+                    embedding,
                     selectedGenres,
                 }),
             });
 
+            console.log('📡 API Response status:', response.status);
+
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error('❌ API Error:', errorData);
                 throw new Error(errorData.error || 'Failed to search movies');
             }
 
             const data = await response.json();
+            console.log('✅ API Success:', { movieCount: data.movies?.length || 0 });
             setMovies(data.movies || []);
 
             if (data.movies.length === 0) {
@@ -80,8 +110,8 @@ export default function HomeClient({ genres }: HomeClientProps) {
             }
         } catch (err) {
             const message = err instanceof Error ? err.message : 'An error occurred';
-            console.error('Search error:', err);
-            setError(message);
+            console.error('❌ Search error:', err);
+            setError(`Error: ${message}`);
             setMovies([]);
         } finally {
             setLoading(false);
@@ -146,12 +176,19 @@ export default function HomeClient({ genres }: HomeClientProps) {
                         >
                             <div className="space-y-2">
                                 <h2 className="text-xl font-semibold">Find Your Vibe</h2>
+                                <p className="text-sm text-muted-foreground">{genres.length} genres available</p>
                             </div>
 
                             <MoodSelector selectedMood={selectedMood} onSelect={setSelectedMood} />
                             <MediaTypeSelector selectedType={mediaType} onSelect={setMediaType} />
                             <VibeInput value={vibe} onChange={setVibe} />
                             <GenreFilter genres={genres} selectedGenres={selectedGenres} onGenreSelect={handleGenreToggle} />
+
+                            {error && (
+                                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">
+                                    {error}
+                                </div>
+                            )}
 
                             <button
                                 onClick={handleSearch}
@@ -199,6 +236,7 @@ export default function HomeClient({ genres }: HomeClientProps) {
                                             onFavorite={() => toggleFavorite(movie.id)}
                                             isFavorite={isFavorite(movie.id)}
                                             index={index}
+                                            onClick={() => setSelectedMovie(movie)}
                                         />
                                     ))}
                                 </div>
@@ -210,6 +248,14 @@ export default function HomeClient({ genres }: HomeClientProps) {
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                <MovieModal
+                    movie={selectedMovie}
+                    isOpen={!!selectedMovie}
+                    onClose={() => setSelectedMovie(null)}
+                    onFavorite={toggleFavorite}
+                    isFavorite={selectedMovie ? isFavorite(selectedMovie.id) : false}
+                />
             </div>
         </main>
     );
