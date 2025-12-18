@@ -8,7 +8,7 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     const movieId = params.id;
-    const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+    const apiKey = process.env.TMDB_API_KEY;
 
     if (!apiKey) {
         return NextResponse.json({ error: 'TMDB API key not configured' }, { status: 500 });

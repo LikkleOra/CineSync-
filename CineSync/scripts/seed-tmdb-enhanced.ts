@@ -21,7 +21,6 @@ async function seedEnhanced() {
     console.log('🚀 Starting Enhanced Bulk TMDb Seeding (Accuracy + Variety)...');
 
     const PAGES_PER_TYPE = 5;
-    const BATCH_SIZE = 20;
 
     let totalInserted = 0;
     let totalFailed = 0;
@@ -47,7 +46,8 @@ async function seedEnhanced() {
 
                     try {
                         // IMPROVED ACCURACY: Embed title and genres along with overview
-                        const textToEmbed = `${movie.title}. Genres: ${movie.genres.join(', ')}. Overview: ${movie.description}`;
+                        const genresList = Array.isArray(movie.genres) ? movie.genres.join(', ') : 'None';
+                        const textToEmbed = `${movie.title}. Genres: ${genresList}. Overview: ${movie.description}`;
 
                         const { embedding } = await getEmbedding(textToEmbed);
 

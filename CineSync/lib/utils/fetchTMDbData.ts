@@ -41,9 +41,9 @@ const TMDB_GENRE_MAP: Record<number, string> = {
 };
 
 function validateApiKey(): string {
-  const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+  const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) {
-    throw new Error('NEXT_PUBLIC_TMDB_API_KEY is not configured');
+    throw new Error('TMDB_API_KEY is not configured');
   }
   return apiKey;
 }

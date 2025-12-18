@@ -27,29 +27,29 @@ interface EmbeddingResult {
 }
 
 export async function getEmbedding(text: string): Promise<EmbeddingResult> {
-    // 1. Input Validation
+    // 1. API Key Check (Validate early to avoid consuming rate limit on misconfigured servers)
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error('GEMINI_API_KEY is not configured in environment variables.');
+    }
+
+    // 2. Input Validation
     if (!text || typeof text !== 'string') {
         throw new Error('Input text must be a non-empty string.');
     }
 
     const trimmed = text.trim();
     if (trimmed.length === 0) {
-        throw new Error('Input text cannot be empty.');
+        throw new Error('Input text cannot be empty or just whitespace.');
     }
 
-    if (trimmed.length > 2000) {
-        throw new Error('Input text exceeds maximum length of 2000 characters.');
+    if (trimmed.length > 5000) { // Gemini can handle more, but we keep a reasonable limit
+        throw new Error('Input text exceeds maximum length of 5000 characters.');
     }
 
-    // 2. Rate Limiting (Server-side guard)
+    // 3. Rate Limiting (Server-side guard)
     if (!checkRateLimit()) {
         throw new Error('Rate limit exceeded. Please try again later.');
-    }
-
-    // 3. API Key Check
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        throw new Error('GEMINI_API_KEY is not configured in environment variables.');
     }
 
     // 4. Call Provider with Retries

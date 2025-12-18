@@ -4,7 +4,8 @@ async function testExtrasAPI(movieId) {
     console.log(`🧪 Testing /api/movies/${movieId}/extras...`);
 
     return new Promise((resolve, reject) => {
-        http.get(`http://localhost:3000/api/movies/${movieId}/extras`, (res) => {
+        const timeout = 10000;
+        const req = http.get(`http://localhost:3000/api/movies/${movieId}/extras`, (res) => {
             let data = '';
             res.on('data', (chunk) => data += chunk);
             res.on('end', () => {
@@ -27,7 +28,14 @@ async function testExtrasAPI(movieId) {
                     reject(e);
                 }
             });
-        }).on('error', (e) => {
+        });
+
+        req.setTimeout(timeout, () => {
+            req.destroy();
+            reject(new Error(`Request timed out after ${timeout}ms`));
+        });
+
+        req.on('error', (e) => {
             console.error('❌ Network Error:', e.message);
             reject(e);
         });

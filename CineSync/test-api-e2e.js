@@ -2,11 +2,13 @@ const http = require('http');
 
 function postRequest(path, body) {
     return new Promise((resolve, reject) => {
+        const timeout = 15000;
         const options = {
             hostname: 'localhost',
             port: 3000,
             path: path,
             method: 'POST',
+            timeout: timeout,
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(body)
@@ -25,10 +27,35 @@ function postRequest(path, body) {
             });
         });
 
+        req.on('timeout', () => {
+            req.destroy();
+            reject(new Error(`Request to ${path} timed out after ${timeout}ms`));
+        });
+
         req.on('error', (e) => reject(e));
         req.write(body);
         req.end();
     });
+}
+
+async function waitForServer(retries = 10) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            await new Promise((resolve, reject) => {
+                const req = http.get('http://localhost:3000', { timeout: 1000 }, (res) => {
+                    res.resume();
+                    resolve();
+                });
+                req.on('error', reject);
+            });
+            console.log('✅ Server is ready!');
+            return;
+        } catch (e) {
+            console.log(`⏳ Waiting for server (attempt ${i + 1}/${retries})...`);
+            await new Promise(r => setTimeout(r, 2000));
+        }
+    }
+    throw new Error('❌ Server timed out');
 }
 
 async function runTest() {
@@ -81,5 +108,10 @@ async function runTest() {
     }
 }
 
-// Wait a bit for Next.js to compile
-setTimeout(runTest, 10000);
+// Run with server check
+waitForServer()
+    .then(runTest)
+    .catch((e) => {
+        console.error(e.message);
+        process.exit(1);
+    });

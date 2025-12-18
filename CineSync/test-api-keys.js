@@ -7,14 +7,14 @@ console.log('🔍 API Key Validation Test\n');
 // Test Gemini API
 async function testGeminiAPI() {
     // Support GEMINI_API_KEY (preferred) and GEMIN_API_KEY (legacy/typo)
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMIN_API_KEY || process.env.GOOGLE_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
     console.log('═══ GEMINI API ═══');
     console.log('Key exists:', apiKey ? '✅ Yes' : '❌ No');
 
     if (!apiKey) {
         console.log('Status: ❌ API key not found in .env.local');
-        console.log('Expected: GEMINI_API_KEY or GEMINI_API_KEY');
+        console.log('Expected: GEMINI_API_KEY');
         return false;
     }
 

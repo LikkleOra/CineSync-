@@ -31,6 +31,8 @@ export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: M
 
     // Fetch movie extras when modal opens
     useEffect(() => {
+        let isCancelled = false;
+
         if (!isOpen || !movie) {
             setExtras(null);
             return;
@@ -40,18 +42,26 @@ export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: M
             setLoadingExtras(true);
             try {
                 const response = await fetch(`/api/movies/${movie.id}/extras`);
-                if (response.ok) {
+                if (response.ok && !isCancelled) {
                     const data = await response.json();
                     setExtras(data);
                 }
             } catch (error) {
-                console.error('Failed to fetch movie extras:', error);
+                if (!isCancelled) {
+                    console.error('Failed to fetch movie extras:', error);
+                }
             } finally {
-                setLoadingExtras(false);
+                if (!isCancelled) {
+                    setLoadingExtras(false);
+                }
             }
         };
 
         fetchExtras();
+
+        return () => {
+            isCancelled = true;
+        };
     }, [isOpen, movie]);
 
     // Prevent body scroll when modal is open
@@ -146,7 +156,7 @@ export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: M
                                     </div>
 
                                     <div className="flex flex-wrap gap-2">
-                                        {movie.genres.map((genre) => (
+                                        {Array.isArray(movie.genres) && movie.genres.map((genre) => (
                                             <span
                                                 key={genre}
                                                 className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white border border-white/10"
@@ -181,7 +191,7 @@ export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: M
                                             <Loader2 className="w-6 h-6 animate-spin" />
                                             <span className="text-sm">Fetching trailer...</span>
                                         </div>
-                                    ) : extras?.trailer ? (
+                                    ) : extras?.trailer && extras.trailer.site === 'YouTube' ? (
                                         <div className="space-y-3">
                                             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                                                 <Play className="w-4 h-4 text-red-500 fill-red-500" />
@@ -197,9 +207,9 @@ export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: M
                                                 />
                                             </div>
                                         </div>
-                                    ) : !loadingExtras && !extras?.trailer && (
+                                    ) : !loadingExtras && (!extras?.trailer || extras?.trailer?.site !== 'YouTube') && (
                                         <div className="py-4 text-sm text-white/40 italic">
-                                            Trailer not available for this movie.
+                                            Trailer not available or platform not supported.
                                         </div>
                                     )}
 

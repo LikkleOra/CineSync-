@@ -37,20 +37,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Search movies by embedding
-    const threshold = process.env.SEARCH_SIMILARITY_THRESHOLD
-      ? parseFloat(process.env.SEARCH_SIMILARITY_THRESHOLD)
-      : 0.1;
-    const matchCount = process.env.SEARCH_MATCH_COUNT
-      ? parseInt(process.env.SEARCH_MATCH_COUNT)
-      : 10;
+    const thresholdEnv = process.env.SEARCH_SIMILARITY_THRESHOLD;
+    const matchCountEnv = process.env.SEARCH_MATCH_COUNT;
+
+    const threshold = thresholdEnv ? parseFloat(thresholdEnv) : 0.1;
+    const matchCount = matchCountEnv ? parseInt(matchCountEnv) : 10;
+
+    // Validate numeric environment variables
+    if (isNaN(threshold) || threshold < 0 || threshold > 1) {
+      console.warn('⚠️ Invalid SEARCH_SIMILARITY_THRESHOLD, defaulting to 0.1');
+    }
+    if (isNaN(matchCount) || matchCount <= 0) {
+      console.warn('⚠️ Invalid SEARCH_MATCH_COUNT, defaulting to 10');
+    }
 
     let movies;
     try {
       console.log(`🔄 Searching database (threshold: ${threshold}, count: ${matchCount})...`);
       movies = await searchMoviesByEmbedding(
         embedding,
-        threshold,
-        matchCount
+        !isNaN(threshold) ? threshold : 0.1,
+        !isNaN(matchCount) ? matchCount : 10
       );
       console.log('✅ Found', movies.length, 'movies');
     } catch (error) {
@@ -63,11 +70,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Filter by selected genres if provided (Case-Insensitive)
-    const normalizedSelectedGenres = selectedGenres?.map((g: string) => g.toLowerCase()) || [];
+    const normalizedSelectedGenres = Array.isArray(selectedGenres)
+      ? selectedGenres.map((g: any) => String(g).toLowerCase())
+      : [];
 
     const filteredMovies = normalizedSelectedGenres.length > 0
       ? movies.filter((movie) =>
-        movie.genres.some((genre: string) =>
+        Array.isArray(movie.genres) && movie.genres.some((genre: string) =>
           normalizedSelectedGenres.includes(genre.toLowerCase())
         )
       )

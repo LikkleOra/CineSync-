@@ -154,8 +154,19 @@ node scripts/seed-tmdb-bulk.js
 
 ## Final Checklist
 
-- [x] Legacy `/api/search` route removed or renamed.
-- [x] `.env.local` contains required keys (Gemini + Supabase public).
-- [x] Tests exist for embedding, DB RPC, and end-to-end search.
-- [x] Bulk seeding implemented with rate limiting and upsert.
-- [x] UI returns rich search results for common vibes and genres.
+- [x] Phase 1 & 2: Search Stability & Expansion
+- [x] Phase 3: Multimedia (Trailers & Watch Providers)
+- [x] Phase 4: Reliability & Security Hardening (The 19-Point Sweep)
+    - [x] [SEC] Mask TMDb API Key (Rename to TMDB_API_KEY)
+    - [x] [SEC] Fix GEMIN_API_KEY typos
+    - [x] [VALID] Stricter selectedGenres and text input validation
+    - [x] [VALID] Movie genres null/undefined defensive checks
+    - [x] [VALID] Case-insensitive genre filtering fix
+    - [x] [RELIABILITY] Fix race conditions in MovieModal fetches
+    - [x] [RELIABILITY] Validate trailer platform (YouTube only)
+    - [x] [RELIABILITY] API key validation before rate-limit consumption
+    - [x] [RELIABILITY] Replace fragile string-matching in errors
+    - [x] [RELIABILITY] Comprehensive timeouts for all API/test requests
+    - [x] [TESTING] Dynamic server-readiness check in E2E tests
+    - [x] [TESTING] Stream consumption in network tests
+    - [x] [CLEANUP] Remove unused constants and legacy routes
