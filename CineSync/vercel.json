@@ -1,21 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "src/app/page.tsx",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
   "env": {
-    "NEXT_PUBLIC_TMDB_API_KEY": "${673b145e4c3392f3335388675376f052}",
-    "NEXT_PUBLIC_HUGGINGFACE_API_KEY": "${hf_bhjaIBJBApUyzQMruCpDpBFdoiIZGaoPqov}",
-    "NEXT_PUBLIC_SUPABASE_URL": "${ https://onydcsboeijtymuvidvl.supabase.co }",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "${eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ueWRjc2JvZWlqdHltdXZpZHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4MTYxNzAsImV4cCI6MjA2NTM5MjE3MH0.KbLQS5BG1lIFw2P8l4ClzUwpCXNrBV9sjT0TaRUARnQ }"
+    "TMDB_API_KEY": "${TMDB_API_KEY}",
+    "GEMINI_API_KEY": "${GEMINI_API_KEY}",
+    "NEXT_PUBLIC_SUPABASE_URL": "${NEXT_PUBLIC_SUPABASE_URL}",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
   }
 }

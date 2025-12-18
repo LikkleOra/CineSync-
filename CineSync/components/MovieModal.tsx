@@ -21,7 +21,7 @@ interface MovieModalProps {
     movie: Movie | null;
     isOpen: boolean;
     onClose: () => void;
-    onFavorite: (movieId: number) => void;
+    onFavorite: (movieId: string) => void;
     isFavorite: boolean;
 }
 
@@ -129,7 +129,7 @@ export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: M
                                         </h2>
                                         {(extras?.tagline || movie.tagline) && (
                                             <p className="text-lg text-white/60 italic font-medium">
-                                                "{extras?.tagline || movie.tagline}"
+                                                &quot;{extras?.tagline || movie.tagline}&quot;
                                             </p>
                                         )}
                                     </div>

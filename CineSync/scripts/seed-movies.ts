@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { fetchPopularMovies } from '../lib/utils/fetchTMDbData';
-import { generateEmbedding } from '../lib/utils/generateEmbedding';
+import { getEmbedding } from '../lib/server/embedding';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
@@ -31,7 +31,7 @@ async function seedMovies() {
     const moviesWithEmbeddings = await Promise.allSettled(
       movies.map(async (movie) => {
         try {
-          const embedding = await generateEmbedding(movie.description);
+          const { embedding } = await getEmbedding(movie.description);
           return { ...movie, embedding };
         } catch (error) {
           console.warn(`⚠️  Failed to embed "${movie.title}": ${error}`);
