@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "tsx scripts/seed-movies.ts"
+    "seed": "tsx scripts/seed-movies.ts",
+    "seed:bulk": "tsx scripts/seed-tmdb-enhanced.ts",
+    "test": "node --test tests/**/*.test.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

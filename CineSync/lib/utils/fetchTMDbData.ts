@@ -129,6 +129,42 @@ export async function fetchPopularMovies(page: number = 1) {
   }
 }
 
+export async function fetchTopRatedMovies(page: number = 1) {
+  try {
+    const apiKey = validateApiKey();
+    const response = await axios.get(
+      `${TMDB_API_BASE_URL}/movie/top_rated`,
+      {
+        params: {
+          api_key: apiKey,
+          language: 'en-US',
+          page,
+        },
+      }
+    );
+
+    const movies = response.data.results as TmdbMovie[];
+    return movies.map((movie) => ({
+      id: movie.id.toString(),
+      title: movie.title,
+      genres: movie.genre_ids
+        .map((id) => TMDB_GENRE_MAP[id])
+        .filter((genre): genre is string => genre !== undefined),
+      description: movie.overview || 'No description available',
+      poster_url: buildPosterUrl(movie.poster_path),
+      release_date: movie.release_date,
+      popularity: movie.popularity,
+      vote_average: movie.vote_average,
+      embedding: [] as number[],
+    }));
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(`TMDb API error fetching top rated movies: ${error.message}`);
+    }
+    throw error;
+  }
+}
+
 export async function fetchMovieGenres() {
   try {
     const apiKey = validateApiKey();

@@ -1,10 +1,21 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Clock, Star, Heart } from 'lucide-react';
+import { X, Calendar, Clock, Star, Heart, Play, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Movie } from '@/types';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+interface MovieExtras {
+    tagline: string | null;
+    runtime: number | null;
+    trailer: { key: string; site: string } | null;
+    providers: {
+        flatrate?: Array<{ provider_id: number; provider_name: string; logo_path: string }>;
+        rent?: Array<{ provider_id: number; provider_name: string; logo_path: string }>;
+        buy?: Array<{ provider_id: number; provider_name: string; logo_path: string }>;
+    } | null;
+}
 
 interface MovieModalProps {
     movie: Movie | null;
@@ -15,6 +26,34 @@ interface MovieModalProps {
 }
 
 export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: MovieModalProps) {
+    const [extras, setExtras] = useState<MovieExtras | null>(null);
+    const [loadingExtras, setLoadingExtras] = useState(false);
+
+    // Fetch movie extras when modal opens
+    useEffect(() => {
+        if (!isOpen || !movie) {
+            setExtras(null);
+            return;
+        }
+
+        const fetchExtras = async () => {
+            setLoadingExtras(true);
+            try {
+                const response = await fetch(`/api/movies/${movie.id}/extras`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setExtras(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch movie extras:', error);
+            } finally {
+                setLoadingExtras(false);
+            }
+        };
+
+        fetchExtras();
+    }, [isOpen, movie]);
+
     // Prevent body scroll when modal is open
     useEffect(() => {
         if (isOpen) {
@@ -78,9 +117,9 @@ export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: M
                                         <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
                                             {movie.title}
                                         </h2>
-                                        {movie.tagline && (
+                                        {(extras?.tagline || movie.tagline) && (
                                             <p className="text-lg text-white/60 italic font-medium">
-                                                "{movie.tagline}"
+                                                "{extras?.tagline || movie.tagline}"
                                             </p>
                                         )}
                                     </div>
@@ -92,10 +131,12 @@ export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: M
                                                 <span>{new Date(movie.release_date).getFullYear()}</span>
                                             </div>
                                         )}
-                                        {movie.runtime && (
+                                        {(extras?.runtime || movie.runtime) && (
                                             <div className="flex items-center gap-1.5">
                                                 <Clock className="w-4 h-4 text-blue-400" />
-                                                <span>{Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m</span>
+                                                <span>
+                                                    {Math.floor((extras?.runtime || movie.runtime || 0) / 60)}h {(extras?.runtime || movie.runtime || 0) % 60}m
+                                                </span>
                                             </div>
                                         )}
                                         <div className="flex items-center gap-1.5">
@@ -133,6 +174,83 @@ export function MovieModal({ movie, isOpen, onClose, onFavorite, isFavorite }: M
                                             {isFavorite ? 'In Favorites' : 'Add to Favorites'}
                                         </Button>
                                     </div>
+
+                                    {/* Trailer Section */}
+                                    {loadingExtras ? (
+                                        <div className="py-8 flex flex-col items-center justify-center gap-3 text-white/40 bg-white/5 rounded-xl border border-white/10">
+                                            <Loader2 className="w-6 h-6 animate-spin" />
+                                            <span className="text-sm">Fetching trailer...</span>
+                                        </div>
+                                    ) : extras?.trailer ? (
+                                        <div className="space-y-3">
+                                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                                <Play className="w-4 h-4 text-red-500 fill-red-500" />
+                                                Official Trailer
+                                            </h3>
+                                            <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10 shadow-xl">
+                                                <iframe
+                                                    src={`https://www.youtube.com/embed/${extras.trailer.key}`}
+                                                    title={`${movie.title} Trailer`}
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                    className="absolute inset-0 w-full h-full"
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : !loadingExtras && !extras?.trailer && (
+                                        <div className="py-4 text-sm text-white/40 italic">
+                                            Trailer not available for this movie.
+                                        </div>
+                                    )}
+
+                                    {/* Watch Providers */}
+                                    {extras?.providers && (
+                                        <div className="space-y-4 pt-4 border-t border-white/10">
+                                            <h3 className="text-lg font-semibold text-white">Where to Watch</h3>
+
+                                            {extras.providers.flatrate && (
+                                                <div className="space-y-3">
+                                                    <h4 className="text-xs font-bold text-white/40 uppercase tracking-wider">Stream</h4>
+                                                    <div className="flex flex-wrap gap-4">
+                                                        {extras.providers.flatrate.map(p => (
+                                                            <div key={p.provider_id} className="group relative">
+                                                                <img
+                                                                    src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
+                                                                    alt={p.provider_name}
+                                                                    className="w-10 h-10 rounded-lg border border-white/10 transition-transform group-hover:scale-110"
+                                                                />
+                                                                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-white text-black text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30">
+                                                                    {p.provider_name}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {(extras.providers.rent || extras.providers.buy) && (
+                                                <div className="space-y-3">
+                                                    <h4 className="text-xs font-bold text-white/40 uppercase tracking-wider">Rent / Buy</h4>
+                                                    <div className="flex flex-wrap gap-4">
+                                                        {[...(extras.providers.rent || []), ...(extras.providers.buy || [])]
+                                                            .filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i)
+                                                            .map(p => (
+                                                                <div key={p.provider_id} className="group relative">
+                                                                    <img
+                                                                        src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
+                                                                        alt={p.provider_name}
+                                                                        className="w-10 h-10 rounded-lg border border-white/10 transition-transform group-hover:scale-110 grayscale group-hover:grayscale-0"
+                                                                    />
+                                                                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-white text-black text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30">
+                                                                        {p.provider_name}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>

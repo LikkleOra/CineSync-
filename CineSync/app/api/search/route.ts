@@ -18,13 +18,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (embedding.length !== 768) {
+    // Dynamic dimension check (warn only)
+    if (embedding.length < 1) {
       console.log('❌ Invalid embedding dimensions');
       return NextResponse.json(
-        { error: `Invalid embedding dimensions: expected 768, got ${embedding.length}` },
+        { error: `Invalid embedding dimensions: got ${embedding.length}` },
         { status: 400 }
       );
     }
+    console.log(`ℹ️ Received embedding with ${embedding.length} dimensions`);
 
     if (selectedGenres && !Array.isArray(selectedGenres)) {
       console.log('❌ Invalid selectedGenres');
@@ -35,13 +37,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Search movies by embedding
+    const threshold = process.env.SEARCH_SIMILARITY_THRESHOLD
+      ? parseFloat(process.env.SEARCH_SIMILARITY_THRESHOLD)
+      : 0.1;
+    const matchCount = process.env.SEARCH_MATCH_COUNT
+      ? parseInt(process.env.SEARCH_MATCH_COUNT)
+      : 10;
+
     let movies;
     try {
-      console.log('🔄 Searching movies in database...');
+      console.log(`🔄 Searching database (threshold: ${threshold}, count: ${matchCount})...`);
       movies = await searchMoviesByEmbedding(
         embedding,
-        0.1, // similarity threshold
-        10   // match count
+        threshold,
+        matchCount
       );
       console.log('✅ Found', movies.length, 'movies');
     } catch (error) {
@@ -53,11 +62,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Filter by selected genres if provided
-    const filteredMovies = selectedGenres?.length
+    // Filter by selected genres if provided (Case-Insensitive)
+    const normalizedSelectedGenres = selectedGenres?.map((g: string) => g.toLowerCase()) || [];
+
+    const filteredMovies = normalizedSelectedGenres.length > 0
       ? movies.filter((movie) =>
-        movie.genres.some((genre) =>
-          selectedGenres.includes(genre.toLowerCase())
+        movie.genres.some((genre: string) =>
+          normalizedSelectedGenres.includes(genre.toLowerCase())
         )
       )
       : movies;

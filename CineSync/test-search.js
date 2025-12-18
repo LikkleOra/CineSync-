@@ -6,7 +6,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 // Using Gemini API Key
-const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GEMIN_API_KEY;
+const geminiApiKey = process.env.GEMINI_API_KEY;
 
 console.log('🔍 CineSync Search Flow Test\n');
 console.log('Environment Check:');
@@ -31,7 +31,7 @@ async function generateEmbedding(text) {
         console.log('✅ Embedding generated:', embedding.length, 'dimensions');
         return embedding;
     } catch (error) {
-         throw new Error(`Gemini API Error: ${error.message}`);
+        throw new Error(`Gemini API Error: ${error.message}`);
     }
 }
 

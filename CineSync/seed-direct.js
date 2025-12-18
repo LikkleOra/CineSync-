@@ -5,7 +5,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const geminiKey = process.env.GEMIN_API_KEY || process.env.GEMINI_API_KEY;
+const geminiKey = process.env.GEMINI_API_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
     console.error('❌ Missing Supabase configuration');
@@ -13,7 +13,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 if (!geminiKey) {
-    console.error('❌ Missing Gemini API key (GEMIN_API_KEY)');
+    console.error('❌ Missing Gemini API key (GEMINI_API_KEY)');
     process.exit(1);
 }
 
