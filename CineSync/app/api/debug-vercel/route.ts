@@ -1,23 +1,39 @@
 import { NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function GET() {
-    const envVars = {
-        GEMINI_API_KEY: process.env.GEMINI_API_KEY ? '✅ Present' : '❌ Missing',
-        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Present' : '❌ Missing',
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Present' : '❌ Missing',
-        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Present' : '❌ Missing',
-        TMDB_API_KEY: process.env.TMDB_API_KEY ? '✅ Present' : '❌ Missing',
-        NODE_ENV: process.env.NODE_ENV,
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+        return NextResponse.json({ status: '❌ Key Missing' });
+    }
+
+    // Check for common formatting issues
+    const checks = {
+        length: apiKey.length,
+        startsWithAI: apiKey.startsWith('AI'),
+        hasQuotes: apiKey.startsWith('"') || apiKey.startsWith("'") || apiKey.endsWith('"') || apiKey.endsWith("'"),
+        hasWhitespace: apiKey.trim() !== apiKey,
     };
 
-    // Safe exposure - show first 4 chars only if present
-    const debugInfo = {
-        config: envVars,
-        details: {
-            geminiLength: process.env.GEMINI_API_KEY?.length || 0,
-            geminiPrefix: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 4) + '...' : 'N/A',
-        }
-    };
+    try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
 
-    return NextResponse.json(debugInfo);
+        // Attempt a real call
+        await model.embedContent('test');
+
+        return NextResponse.json({
+            status: '✅ Working',
+            keyChecks: checks
+        });
+    } catch (error: any) {
+        return NextResponse.json({
+            status: '❌ Failed',
+            keyChecks: checks,
+            errorMessage: error.message,
+            errorDetails: error,
+            env: process.env.NODE_ENV
+        });
+    }
 }
